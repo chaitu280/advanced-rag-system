@@ -14,8 +14,12 @@ from src.rag.vectorstore import (
     load_vectorstore
 )
 
+from src.rag.bm25 import (
+    BM25Retriever
+)
+
 from src.rag.retriever import (
-    Retriever
+    HybridRetriever
 )
 
 from src.rag.generator import (
@@ -29,7 +33,7 @@ from src.rag.pipeline import (
 
 def main():
 
-    # Load variables from .env
+    # Load environment variables
     load_dotenv()
 
     # Check Gemini API key
@@ -42,34 +46,73 @@ def main():
         )
 
     print("=" * 60)
-    print("NORMAL RAG SYSTEM - GEMINI")
+
+    print("HYBRID RAG SYSTEM - GEMINI")
+
     print("=" * 60)
 
-    # Embedding model
+
+    # -----------------------------------------
+    # Embeddings
+    # -----------------------------------------
+
     embeddings = get_embeddings()
 
-    # Load FAISS
+
+    # -----------------------------------------
+    # FAISS
+    # -----------------------------------------
+
     vectorstore = load_vectorstore(
         embeddings,
         VECTORSTORE_DIR
     )
 
-    # Retriever
-    retriever = Retriever(
-        vectorstore
+
+    # -----------------------------------------
+    # BM25
+    # -----------------------------------------
+
+    bm25 = BM25Retriever.load(
+        VECTORSTORE_DIR / "bm25.pkl"
     )
 
-    # Generator
+
+    # -----------------------------------------
+    # Hybrid Retriever
+    # -----------------------------------------
+
+    retriever = HybridRetriever(
+        vectorstore,
+        bm25
+    )
+
+
+    # -----------------------------------------
+    # Generator - Gemini
+    # -----------------------------------------
+
     generator = Generator()
 
-    # RAG pipeline
+
+    # -----------------------------------------
+    # RAG Pipeline
+    # -----------------------------------------
+
     rag = RAGPipeline(
         retriever,
         generator
     )
 
-    print("\nRAG system ready!")
-    print("Type 'exit' to quit.\n")
+
+    print(
+        "\nHybrid RAG system ready!"
+    )
+
+    print(
+        "Type 'exit' to quit.\n"
+    )
+
 
     while True:
 
@@ -77,35 +120,71 @@ def main():
             "You: "
         ).strip()
 
+
         if question.lower() == "exit":
+
             break
 
+
         if not question:
+
             continue
+
 
         result = rag.run(
             question
         )
 
+
         print("\nAssistant:")
-        print(result["answer"])
 
-        print("\nRetrieved Sources:")
+        print(
+            result["answer"]
+        )
 
-        for i, document in enumerate(
-            result["documents"],
+
+        print(
+            "\nRetrieved Chunks:"
+        )
+
+
+        for i, item in enumerate(
+            result["results"],
             start=1
         ):
 
+            document = item["document"]
+
+            score = item["score"]
+
+            chunk_id = document.metadata.get(
+                "chunk_id",
+                "Unknown"
+            )
+
+            source = document.metadata.get(
+                "source",
+                "Unknown"
+            )
+
+            page = document.metadata.get(
+                "page",
+                "Unknown"
+            )
+
+
             print(
                 f"{i}. "
-                f"{document.metadata.get('source', 'Unknown')} "
-                f"| Page: "
-                f"{document.metadata.get('page', 'Unknown')}"
+                f"{chunk_id} | "
+                f"{source} | "
+                f"Page: {page} | "
+                f"RRF: {score:.4f}"
             )
+
 
         print()
 
 
 if __name__ == "__main__":
+
     main()

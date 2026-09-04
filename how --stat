@@ -1,0 +1,28 @@
+[33mcommit 2a0f54f8e969f25f28281eac6bcac52bad942a48[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Your Name <mannechaitanya@gmail.com>
+Date:   Fri Sep 4 17:03:46 2026 +0530
+
+    Build initial normal RAG pipeline
+
+ .env.example                                       |   1 [32m+[m
+ .gitignore                                         |  12 [32m+++[m
+ README.md                                          |   0
+ .../Manne_Chaitanya_AI_Engineer_Resume.pdf         | Bin [31m0[m -> [32m307381[m bytes
+ data/documents/PM_AWAS.pdf                         | Bin [31m0[m -> [32m426768[m bytes
+ data/documents/PM_KISAN.pdf                        | Bin [31m0[m -> [32m3721080[m bytes
+ main.py                                            | 111 [32m+++++++++++++++++++++[m
+ requirements.txt                                   |   9 [32m++[m
+ scripts/build_index.py                             |  53 [32m++++++++++[m
+ src/__init__.py                                    |   0
+ src/rag/__init__.py                                |   0
+ src/rag/build_index.py                             |  53 [32m++++++++++[m
+ src/rag/chunking.py                                |  33 [32m++++++[m
+ src/rag/config.py                                  |  28 [32m++++++[m
+ src/rag/embeddings.py                              |  20 [32m++++[m
+ src/rag/generator.py                               |  67 [32m+++++++++++++[m
+ src/rag/ingestion.py                               |  49 [32m+++++++++[m
+ src/rag/pipeline.py                                |  75 [32m++++++++++++++[m
+ src/rag/retriever.py                               |  25 [32m+++++[m
+ src/rag/vectorstore.py                             |  52 [32m++++++++++[m
+ tests/__init__.py                                  |   0
+ 21 files changed, 588 insertions(+)

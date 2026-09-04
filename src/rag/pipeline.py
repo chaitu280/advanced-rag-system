@@ -1,26 +1,32 @@
-from .retriever import Retriever
+from .retriever import HybridRetriever
 from .generator import Generator
+
+from .config import FINAL_TOP_K
 
 
 class RAGPipeline:
 
     def __init__(
         self,
-        retriever: Retriever,
+        retriever: HybridRetriever,
         generator: Generator
     ):
 
         self.retriever = retriever
+
         self.generator = generator
+
 
     def build_context(
         self,
-        documents
+        results
     ):
 
         context_parts = []
 
-        for document in documents:
+        for result in results:
+
+            document = result["document"]
 
             source = document.metadata.get(
                 "source",
@@ -32,10 +38,16 @@ class RAGPipeline:
                 "Unknown"
             )
 
+            chunk_id = document.metadata.get(
+                "chunk_id",
+                "Unknown"
+            )
+
             content = document.page_content
 
             context_parts.append(
                 f"""
+Chunk ID: {chunk_id}
 Source: {source}
 Page: {page}
 
@@ -48,28 +60,48 @@ Content:
             context_parts
         )
 
+
     def run(
         self,
         question: str
     ):
 
-        # 1. Retrieve
-        documents = self.retriever.retrieve(
+        # -----------------------------------------
+        # Hybrid retrieval
+        # -----------------------------------------
+
+        results = self.retriever.retrieve(
             question
         )
 
-        # 2. Build context
+
+        # -----------------------------------------
+        # Select final chunks
+        # -----------------------------------------
+
+        results = results[:FINAL_TOP_K]
+
+
+        # -----------------------------------------
+        # Build context
+        # -----------------------------------------
+
         context = self.build_context(
-            documents
+            results
         )
 
-        # 3. Generate
+
+        # -----------------------------------------
+        # Generate answer
+        # -----------------------------------------
+
         answer = self.generator.generate(
             question,
             context
         )
 
+
         return {
             "answer": answer,
-            "documents": documents
+            "results": results
         }
